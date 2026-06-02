@@ -138,6 +138,7 @@
                 <div class="header-right">
                     <input type="file" id="excelFile" style="display:none;" accept=".xlsx, .xls, .csv" onchange="importExcel(event)">
                     <button class="btn-outline" onclick="document.getElementById('excelFile').click()">엑셀 불러오기</button>
+                    <button class="btn-outline" onclick="exportToExcel()">엑셀 내보내기</button>
                     <button class="btn-outline" onclick="alert('추후 도담플래너 링크로 연결될 예정입니다.')">플래너로 이동</button>
                     <button class="btn-outline" onclick="handleLogout()">로그아웃</button>
                 </div>
@@ -825,6 +826,34 @@
             document.getElementById('dashAsset').innerText = `₩ ${totalAsset.toLocaleString()}`;
             document.getElementById('dashLiability').innerText = `₩ ${totalLiability.toLocaleString()}`;
             document.getElementById('dashNetIncome').innerText = `₩ ${(totalRevenue - totalExpense).toLocaleString()}`;
+        }
+
+        // --- 현재 장부를 엑셀(CSV) 파일로 저장하기 ---
+        function exportToExcel() {
+            if (ledgers.length === 0) return alert("내보낼 데이터가 없습니다.");
+
+            let csv = '날짜,아이템,금액,왼쪽,오른쪽,비고\n';
+            
+            ledgers.forEach(t => {
+                // 쉼표가 들어간 데이터가 깨지지 않도록 따옴표 처리
+                const row = [
+                    t.date, 
+                    `"${t.item}"`, 
+                    t.amount, 
+                    `"${t.debit}"`, 
+                    `"${t.credit}"`, 
+                    `"${t.memo || ''}"`
+                ].join(',');
+                csv += row + '\n';
+            });
+
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "도담캐시_백업.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         // (기존 updateIncomeStatement 함수가 있다면, 그 안에서도 document.getElementById('filterStartDate').value 로 날짜를 가져오도록 1~2줄만 수정해주시면 완벽합니다!)
